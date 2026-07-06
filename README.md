@@ -44,14 +44,29 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
+Running the CLI demo (`python main.py`) produces:
 
 ```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
+🐾 Today's Schedule for Jordan
+================================================
+  07:30  Luna      Refill food           5 min  [medium]
+  08:00  Mochi     Morning walk         30 min  [high]
+  08:00  Luna      Litter cleanup       10 min  [high]
+  16:00  Mochi     Fetch / play         25 min  [low]
+  18:00  Mochi     Dinner               10 min  [high]
+================================================
+Time budget: 90 min. Planned 5 of 6 pending tasks using 80 min.
+Tasks are chosen highest-priority first (so the day stays within budget), then listed by time of day.
+Skipped for lack of time: Brush coat (low).
+
+🔎 Conflicts
+------------------------------------------------
+  ⚠️ 08:00 conflict: Mochi's 'Morning walk', Luna's 'Litter cleanup'
+
+🔁 Recurring roll-forward
+------------------------------------------------
+  Completed today: Morning walk (daily) for Mochi
+  Created for Mon Jul 06: Morning walk for Mochi
 ```
 
 ## 🧪 Testing PawPal+
@@ -67,28 +82,44 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: ai110-module2show-pawpal-starter
+collected 11 items
+
+tests/test_pawpal.py::test_task_mark_complete_changes_status PASSED       [  9%]
+tests/test_pawpal.py::test_adding_task_increases_pet_task_count PASSED    [ 18%]
+tests/test_pawpal.py::test_add_task_stamps_pet_name PASSED                [ 27%]
+tests/test_pawpal.py::test_owner_collects_tasks_across_pets PASSED        [ 36%]
+tests/test_pawpal.py::test_scheduler_respects_time_budget PASSED          [ 45%]
+tests/test_pawpal.py::test_completed_tasks_excluded_from_plan PASSED      [ 54%]
+tests/test_pawpal.py::test_sort_by_time_returns_chronological_order PASSED [ 63%]
+tests/test_pawpal.py::test_completing_daily_task_creates_next_day_occurrence PASSED [ 72%]
+tests/test_pawpal.py::test_advance_recurring_does_not_duplicate PASSED    [ 81%]
+tests/test_pawpal.py::test_detect_conflicts_flags_same_time_tasks PASSED  [ 90%]
+tests/test_pawpal.py::test_detect_conflicts_ignores_distinct_times PASSED [100%]
+
+============================== 11 passed in 0.02s ==============================
 ```
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_priority`, `Scheduler.sort_by_time` | Select tasks highest-priority-first (ties broken by time), then display sorted by time of day. |
+| Filtering | `Scheduler.filter_to_budget`, `filter_by_pet`, `filter_by_completion`; `Owner/Pet.get_pending_tasks` | Greedily keep the highest-priority tasks that fit the owner's time budget; also filter by pet or by completion status. |
+| Conflict handling | `Scheduler.detect_conflicts` | Flags tasks sharing the exact same preferred time (across all pets); surfaced via `st.warning` in the UI. |
+| Recurring tasks | `Scheduler.create_next_occurrence`, `advance_recurring_tasks` | Completing a daily/weekly task creates the next occurrence with `datetime.timedelta` (+1 or +7 days), guarded so it never duplicates. |
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+1. **Set up the owner** — open the app (`streamlit run app.py`) and, under *Owner settings*, set your name and how many minutes you have today. This becomes the scheduler's time budget.
+2. **Add a pet** — enter a name and species and click *Add pet*. Duplicate and blank names are rejected; a success message confirms the add.
+3. **Schedule tasks** — pick a pet, then add tasks with a duration, priority, preferred time, category, and frequency (once / daily / weekly).
+4. **View today's schedule** — click *Generate schedule*. PawPal+ keeps the highest-priority tasks that fit your time budget and lists them **sorted by time of day**, with a one-line explanation of what it planned and skipped.
+5. **See conflict warnings** — if two tasks share the same time (even across different pets), a ⚠️ warning appears above the schedule.
+6. **Complete a task** — tick *done*. Completed tasks drop out of the plan, and **daily/weekly tasks automatically roll forward** to their next occurrence.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+**Key Scheduler behaviors:** sorting (by priority to select, by time to display), budget filtering, exact-time conflict detection, and recurring roll-forward.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
